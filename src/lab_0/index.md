@@ -48,3 +48,19 @@ This page is where you can iterate. Follow the lab instructions in the [readme.m
 </ul>
 
 <a href="https://www.gc.cuny.edu/">CUNY Gradcenter</a>
+
+```js run=false
+1 + 2
+```
+
+The current time is ${new Date(now).toLocaleTimeString("en-US")}.
+
+<div class="card">
+  ${resize((width) => Plot.barX([9, 4, 8, 1, 11, 3, 4, 2, 7, 5]).plot({width}))}
+</div>
+
+
+```js
+const team = view(Inputs.radio(["NY Liberty", "Las Vegas Aces", "Phoenix Mercury", "Indiana Fever"], {label: "Favorite team:", value: "NY Liberty"}));
+```
+**My favorite WNBA team is the ${team}!**
