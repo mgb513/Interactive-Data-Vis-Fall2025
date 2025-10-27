@@ -15,6 +15,14 @@ export default {
         { name: "Dashboard", path: "/lab_0/index" },
       ],
     },
+    {
+      name: "Lab 1: Prolific Pollinators",
+      open: true,
+      pages: [
+        { name: "Instructions", path: "/lab_1/readme" },
+        { name: "Dashboard", path: "/lab_1/index" },
+      ],
+    },
   ],
 
   // Content to add to the head of the page, e.g. for a favicon:
