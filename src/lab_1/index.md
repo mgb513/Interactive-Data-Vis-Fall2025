@@ -9,9 +9,9 @@ This page is where you can iterate. Follow the lab instructions in the [readme.m
 
 ## June 2024 Pollinator Data Analysis
 
-<p>NOTE: <i>I have left several versions of graphs in this dashboard as opposed to cleaning the whole thing up. I still have some trouble with annotations and am not sure how to keep thing in/vsible. So I erred on the side of visibility. I am aware that I am probably moving slower than others. I hope to catch up. </i></p>
+<p>NOTE: <i>I have left several versions of graphs in this dashboard as opposed to cleaning the whole thing up. I still have some trouble with annotations and am not sure how to keep extraneous snippets in/vsible. So I erred on the side of too much visibility. I am aware that I am probably moving slower than others. I hope to catch up. </i></p>
 
-<p>In respones to your bee-related inquiries we have found the following:</p>
+<p>In respone to your bee-related inquiries we have found the following:</p>
 
 <h2> Question 1 </h2>
 <p>What is the body mass and wing span distrbution of each pollinator species observed?</p>
@@ -50,7 +50,7 @@ Plot.plot({
    ]
 })
 ```
-<p> The three species measured appear in very distinct clusters or groupings. Wing span and body mass are correlated within each group."
+<p> The three bee species measured appear in very distinct clusters or groupings. Wing span and body mass are correlated within each group, with carpenter bees having the highest mass and widest wingspan, and honeybees showing the lowest."
 
 <h2> Question 3 </h2>
 <p>Which flower has the most nectar production?</p>
@@ -149,9 +149,9 @@ Plot.plot({
 })
 ```
 <p><i> This looks cool. And I had a plan. Namely to make distisnct colcors for nectar produced per flower in three increments. 
-But I couldn't get there. And I am not sure why the stuff below isn't invisible.</i><p>
+But I couldn't get there. And I am not sure why the stuff below isn't invisible. Although, after watching during class on Monday, I noticed that there's a different way to make larger blocks invisible.</i><p>
 
-// ```js
+<!-- ```js
     const colors = ["#e41a1c", "#377eb8", "#4daf4a"];
     Plot.plot({
   marks: [
@@ -176,7 +176,8 @@ But I couldn't get there. And I am not sure why the stuff below isn't invisible.
     )
   ]
 })
-```
+``` -->
+
 ```js 
 Plot.plot({
     //width: 300,
@@ -195,7 +196,7 @@ Plot.plot({
 ```
 
 <h2> Question 2</h2>
-
+<p>What is the ideal weather for pollinating?</p>
 ```js
 Plot.plot({
   marks: [
@@ -232,5 +233,5 @@ Plot.dot(pollinator, {x: "wind_speed", y: "visit_count", stroke: "weather_condit
 Plot.dot(pollinator, {x: "humidity", y: "visit_count", stroke: "weather_condition", tip: true }).plot()
 ```
 
-<p>Finally, humidity seems to have the least influence on the visit count, as density and varios humidity levels seems consistenly disributed. </p>
+<p>Finally, humidity seems to have the least influence on the visit count, as humidity levels seems consistenly disributed. </p>
 
