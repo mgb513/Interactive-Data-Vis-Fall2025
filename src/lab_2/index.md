@@ -59,11 +59,249 @@ display(ridership[0])
 display(local_events[0]) 
 display(incidents[0])
 ```
-# Q2
-As is visble in the chart below, Columbus Circle, West 4th Street, Bowling Greene, Canal Street and Union Square show the slowest average response times
 
-Fulton & Houston Street, Times Square, and Penn Station respond the fastest to incidents.
+# Factors Impcating Ridership
 
+### What effect did the July 15th fare increase have on ridership overall?
+
+<!--
+const ridership = await FileAttachment(".ridership.csv").csv({ typed: true })
+const events = await FileAttachment("./stock_data/stock_events.csv").csv({ typed: true })
+display(stocks[0])
+display(events[0]) -->
+
+
+```js
+const combined = local_events.map(event => {
+  const matchingRidership = ridership.find(r => 
+    r.station === event.nearby_station && 
+    r.date === event.date
+  );
+  
+  return {
+    date: event.date,
+    station: event.nearby_station,
+    event_name: event.event_name,
+    estimated_attendance: event.estimated_attendance,
+    entrances: matchingRidership?.entrances,
+    exits: matchingRidership?.exits
+  };
+});
+```
+<!--
+```js
+display(combined[0])
+```  -->
+
+```js
+const dailyTotals = d3.rollup(
+  ridershipWithTotal,
+  v => d3.sum(v, d => d.total_ridership),
+  d => d.date
+);
+```
+```js
+// Convert to array for plotting
+const dailyData = Array.from(dailyTotals, ([date, total]) => ({
+  date: date,
+  total_ridership: total
+}));
+```
+<!--
+```js
+Plot.plot({
+  marks: [
+    // Line showing daily total ridership
+    Plot.line(dailyData, {
+      x: "date", 
+      y: "total_ridership", 
+      stroke: "black"
+    }),
+    // Vertical rules for event dates
+    Plot.ruleX(local_events, {
+      x: "date",
+      stroke: "red",
+      strokeWidth: 2,
+      strokeOpacity: 0.5,
+      tip: true,
+      channels: {
+        "Event": "event_name",
+        "Station": "nearby_station",
+        "Attendance": "estimated_attendance"
+      }
+    })
+  ],
+  y: {label: "Total Ridership"},
+  x: {label: "Date"},
+  title: "NYC Subway Ridership - Summer 2025"
+})
+```
+-->
+
+```js
+  const eventDatesSet = new Set(local_events.map(e => e.date));
+  
+  const eventDays = dailyData.filter(d => eventDatesSet.has(d.date));
+  const nonEventDays = dailyData.filter(d => !eventDatesSet.has(d.date));
+  
+  const avgEventRidership = d3.mean(eventDays, d => d.total_ridership);
+  const avgNonEventRidership = d3.mean(nonEventDays, d => d.total_ridership);
+  
+  Plot.plot({
+    marks: [
+      Plot.barY([
+        {type: "Event Days", ridership: avgEventRidership},
+        {type: "Non-Event Days", ridership: avgNonEventRidership}
+      ], {
+        x: "type",
+        y: "ridership",
+        fill: "type",
+        tip: true
+      })
+    ],
+    y: {label: "Average Total Ridership"},
+    color: {scheme: "category10"},
+    title: "Event vs Non-Event Day Ridership"
+  })
+```
+
+On July 15th, 2025, the subway fare increased from $2.75 to $3.00.
+
+
+```js
+const ridershipWithTotal = ridership.map(d => ({
+  ...d,
+  total_ridership: d.entrances + d.exits
+}));
+
+const preFareIncrease = ridershipWithTotal.filter(d => d.date < new Date("2025-07-15"));
+const postFareIncrease = ridershipWithTotal.filter(d => d.date >= new Date("2025-07-15"));
+
+const dailyRidership = d3.rollups(
+  ridershipWithTotal,
+  v => d3.sum(v, d => d.total_ridership),
+  d => d.date
+).map(([date, total_ridership]) => ({ date, total_ridership }));
+
+// Calculate average ridership for each period
+const avgPreFare = d3.mean(preFareIncrease, d => d.total_ridership);
+const avgPostFare = d3.mean(postFareIncrease, d => d.total_ridership);
+```
+```js
+const eventDatesSet = new Set(local_events.map(e => e.date));
+  
+const dataWithType = dailyData.map(d => ({
+    ...d,
+    day_type: eventDatesSet.has(d.date) ? "Event Day" : "Non-Event Day"
+  }));
+```
+
+```js
+html`<div class="card">
+  ${Plot.plot({
+    title: "Daily Total Ridership: June 1 - August 14, 2025",
+    x: { label: "Date" },
+    y: { label: "Total Daily Ridership" },
+    marginTop: 40,
+    marks: [
+      Plot.line(dailyRidership, {
+        x: "date",
+        y: "total_ridership",
+        stroke: "steelblue"  
+      }),
+      Plot.ruleX([new Date("2025-07-15")], {
+        stroke: "red",  
+        strokeWidth: 2,
+        strokeDasharray: "5,5"
+      }),
+      Plot.text([{date: new Date("2025-07-15"), ridership: Math.max(...dailyRidership.map(d => d.total_ridership))}], {
+        x: "date",
+        y: "ridership",
+        text: ["July 15th Fare Increase"],
+        dy: -20,
+        fill: "red",  
+        fontSize: 12,
+        fontWeight: "bold"
+      })
+    ],
+    width: 800,
+    height: 400
+  })}
+</div>`
+```
+
+Some comparisons about ridership before and after the fare increase:
+
+- **Before fare increase (June 1 - July 14)**: Average daily ridership was approximately ${Math.round(avgPreFare).toLocaleString()}
+- **After fare increase (July 15 - August 14)**: Average daily ridership dropped to approximately ${Math.round(avgPostFare).toLocaleString()}
+
+#### Key Finding
+
+The fare increase from $2.75 to $3.00 resulted in an immediate drop in ridership of approximately ${Math.round((1 - avgPostFare/avgPreFare) * 100)}%. 
+
+### How did local events impact ridership in summer 2025?
+
+<!--days with events and days without events 
+I have to use local_events and ridership. The date range already matches. 
+1. I have to filter ridership for stations that match stations in local_events to get something like event_stations. 
+2. Once I have these, I can then look at how ridership at these stations on events days compares to ridership at these stations on non-event days. 
+
+So, there could be a bar chart that makes two bars for every station. Which means I'd have 50 bars.
+I can also imagine a cell plot that marks a cell for every station on every day and colors it according to ridership. BUt that wouldn't be as informative. 
+But probably better a line plot that has date on the x axis and ridership on the y axis and little dots to make events days. 
+-->
+
+```js
+  const eventStations = new Set(local_events.map(e => e.nearby_station));
+```
+```js
+  const eventDates = new Set(local_events.map(d => new Date(d.date).toDateString()));
+```
+
+
+```js 
+html`<div class="card"> 
+  <h2>Daily Ridership with Event Days</h2>
+  ${Plot.plot({
+    marks: [
+      Plot.line(dailyRidership, {
+        x: "date",
+        y: "total_ridership",
+        stroke: "steelblue",
+        strokeWidth: 2
+      }),
+      Plot.dot(
+        dailyRidership.filter(d => eventDates.has(new Date(d.date).toDateString())),
+        {
+          x: "date",
+          y: "total_ridership",
+          fill: "red",
+          r: 5
+        }
+      ),
+      Plot.tip(dailyRidership, Plot.pointerX({
+        x: "date",
+        y: "total_ridership",
+        title: d => `Date: ${new Date(d.date).toLocaleDateString()}
+Ridership: ${d.total_ridership.toLocaleString()}
+Event Day: ${eventDates.has(new Date(d.date).toDateString()) ? "Yes" : "No"}`
+      }))
+    ],
+    x: { label: "Date" },
+    y: { label: "Total Ridership", grid: true },
+    width: 800,
+    height: 400
+  })}
+</div>`
+```
+The red dots on the ridership line mark dates with events. Events are disproportionallty positioned on the ridership lines' peaks, indicating that ridership on events days is often higher than on non-event days.
+
+# Incident Response Times
+
+### How do the stations compare when it comes to response time? Which are the best, which are the worst?
+
+
+<!--
 ```js
 Plot.plot({
   marginLeft: 120,
@@ -85,7 +323,7 @@ Plot.plot({
   ]
 })
 ```
-
+I'm wondering what's happening here but I think it's another pseudo bar chart.
 ```js
 Plot.plot({
   marginLeft: 100,
@@ -116,6 +354,7 @@ Plot.plot({
   ]
 })
 ```
+-->
 
 ```js
 const stationAverages = Array.from(
@@ -152,8 +391,13 @@ Plot.plot({
 })
 ```
 
-# Q3
+#### Key Finding
+As is visble in the chart above, Columbus Circle, West 4th Street, Bowling Greene, Canal Street and Union Square show the slowest average response times.
+On average, Fulton & Houston Street, Times Square, and Penn Station respond to incidents most quickly.
 
+# Recommended Staffing Increases for 2026 
+
+### Which three stations need the most staffing help for next summer based on the 2026 event calendar?
 
 ```js
 (() => {
@@ -186,7 +430,7 @@ Plot.plot({
     color: {
       scheme: "Blues",
       legend: true,
-      label: "Total Attendance"
+      label: "Expected Attendance "
     },
     marks: [
       Plot.barX(stations, {
@@ -200,7 +444,7 @@ Plot.plot({
   });
 })()
 ```
-
+<!--
 ```js
 (() => {
   const stationTotals = {};
@@ -253,239 +497,12 @@ Plot.plot({
   });
 })()
 ```
+-->
 
-In the summer of 2026, Canal Street, Penn Station, and Chambers Street are projected to field the most events attendees. 
+#### Key Finding
+In the summer of 2026, Canal Street, Penn Station, and Chambers Street are projected to field the most event attendees. Events near Canal Street are expected to draw over 70,000 attendees, Penn Station will likely accommodoate almost 60,000 attendees and CHambers Street station is located near events expected to draw close to 50,000 attendees.
 
 Based on Canal Street's projected additional traffic and the stations current placement in the top 5 for longest incident response times, I would prioritize it to receive additional staffing.
 
-
-
-# Q1
-
-<!--
-const ridership = await FileAttachment(".ridership.csv").csv({ typed: true })
-const events = await FileAttachment("./stock_data/stock_events.csv").csv({ typed: true })
-display(stocks[0])
-display(events[0]) -->
-
-
-```js
-Plot.plot({
-  height: 400,
-  width: width,
-  marks: [
-    Plot.dot(ridership, {
-      x: "entrances",
-      y: "station",
-      tip: true
-    })
-  ]
-})
-```
-<!-->
-```js
-const combined = local_events.map(event => {
-  const matchingRidership = ridership.find(r => 
-    r.station === event.nearby_station && 
-    r.date === event.date
-  );
-  
-  return {
-    date: event.date,
-    station: event.nearby_station,
-    event_name: event.event_name,
-    estimated_attendance: event.estimated_attendance,
-    entrances: matchingRidership?.entrances,
-    exits: matchingRidership?.exits
-  };
-});
-```
-```js
-display(combined[0])
-```  
-```js
-const ridershipWithTotal = ridership.map(r => ({
-  date: r.date,
-  station: r.station,
-  total_ridership: r.entrances + r.exits
-}));
-```
-```js
-const dailyTotals = d3.rollup(
-  ridershipWithTotal,
-  v => d3.sum(v, d => d.total_ridership),
-  d => d.date
-);
-```
-```js
-// Convert to array for plotting
-const dailyData = Array.from(dailyTotals, ([date, total]) => ({
-  date: date,
-  total_ridership: total
-}));
-```
-```js
-const eventDates = local_events.map(e => ({
-  date: e.date,
-  event_name: e.event_name
-}));
-```
-```js
-Plot.plot({
-  marks: [
-    // Line showing daily total ridership
-    Plot.line(dailyData, {x: "date", y: "total_ridership", stroke: "black"}),
-    
-    // Dots marking event dates
-    Plot.dot(eventDates, {
-      x: "date", 
-      y: (d) => {
-        // Find the ridership for this event date
-        const dayData = dailyData.find(day => day.date === d.date);
-        return dayData?.total_ridership;
-      },
-      fill: "red",
-      r: 5  // radius of dots
-    }),
-    
-    // Optional: add labels for events
-    Plot.text(eventDates, {
-      x: "date",
-      y: (d) => {
-        const dayData = dailyData.find(day => day.date === d.date);
-        return dayData?.total_ridership;
-      },
-      text: "event_name",
-      dy: -10  // offset above the dot
-    })
-  ],
-  
-  // Styling
-  y: {label: "Total Ridership"},
-  x: {label: "Date"},
-  title: "NYC Subway Ridership - Summer 2025"
-})
-```
-```js
-eventDates.map(e => ({
-  event_date: e.date,
-  has_ridership: dailyData.find(day => day.date === e.date) ? "YES" : "NO"
-}))
-```
--->
-
-
-On July 15th, 2025, the subway fare increased from $2.75 to $3.00.
-
-## Q1, Part 2: Overall Ridership Trend
-
-```js
-
-const ridershipWithTotal = ridership.map(d => ({
-  ...d,
-  total_ridership: d.entrances + d.exits
-}));
-
-const preFareIncrease = ridershipWithTotal.filter(d => d.date < new Date("2025-07-15"));
-const postFareIncrease = ridershipWithTotal.filter(d => d.date >= new Date("2025-07-15"));
-
-const dailyRidership = d3.rollups(
-  ridershipWithTotal,
-  v => d3.sum(v, d => d.total_ridership),
-  d => d.date
-).map(([date, total_ridership]) => ({ date, total_ridership }));
-
-// Calculate average ridership for each period
-const avgPreFare = d3.mean(preFareIncrease, d => d.total_ridership);
-const avgPostFare = d3.mean(postFareIncrease, d => d.total_ridership);
-```
-
-
-```js
-Plot.plot({
-  title: "Daily Total Ridership: June 1 - August 14, 2025",
-  x: { label: "Date" },
-  y: { label: "Total Daily Ridership" },
-  marks: [
-    
-    Plot.line(dailyRidership, {
-      x: "date",
-      y: "total_ridership"
-    }),
-  
-    Plot.ruleX([new Date("2025-07-15")], {
-      stroke: "red",
-      strokeWidth: 2,
-      strokeDasharray: "5,5"
-    })
-  ],
-  width: 800,
-  height: 400
-})
-```
-
-
-Some comparisons about ridership before and after the fare increase:
-
-- **Before fare increase (June 1 - July 14)**: Average daily ridership was approximately ${Math.round(avgPreFare).toLocaleString()}
-- **After fare increase (July 15 - August 14)**: Average daily ridership dropped to approximately ${Math.round(avgPostFare).toLocaleString()}
-
-### Key Finding
-
-The fare increase from $2.75 to $3.00 resulted in an immediate drop in ridership of approximately ${Math.round((1 - avgPostFare/avgPreFare) * 100)}%. 
-
-# PLAYGROUND Q1, part 1
-
-### days with events and days without events 
-I have to use local_events and ridership. The date range already matches. 
-1. I have to filter ridership for stations that match stations in local_events to get something like event_stations. 
-2. Once I have these, I can then look at how ridership at these stations on events days compares to ridership at these stations on non-event days. 
-
-So, there could be a bar chart that makes two bars for every station. Which means I'd have 50 bars.
-I can also imagine a cell plot that marks a cell for every station on every day and colors it according to ridership. BUt that wouldn't be as informative. 
-But probably better a line plot that has date on the x axis and ridership on the y axis and little dots to make events days. 
-
-<!--
-```js
-const event_stations = ridership.map(personObject => {
-  const matchingCity = city_to_state.find(cityObject => {
-    return personObject.city == cityObject.city
-  })
-  return ({
-    ...personObject, // spread to keep the existing object data
-    state: matchingCity.state // get the state from the matching city object 
-  })
-})
-display(people_with_state)
-
-
-const anotherSelectedStock = view(Inputs.select(allTickers))
-```
-
-```js
-Plot.plot({
-  height: 200, 
-  width,
-  marks: [
-    // filter the STOCK data to only the selected tooltip, which is in the "Ticker" column
-    Plot.line(stocks.filter(d => d.Ticker === anotherSelectedStock), {
-      x: "Date",
-      y: "Close",
-      z: "Ticker",
-      stroke: "Ticker",
-    }),
-    // filter the EVENTS data to check if the "Related Tickers" (in the format AAPL|META|GOOG) includes the selected stock
-    Plot.ruleX(events.filter(d => d["Related Tickers"].includes(anotherSelectedStock)), {
-      x: "Date", 
-      tip: true,
-      channels: {
-        "Event": "Event Name", 
-        "Notes": "Notes"
-      }
-    })
-  ]
-})
-```
--->
 
 
