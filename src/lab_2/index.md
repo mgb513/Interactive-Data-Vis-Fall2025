@@ -354,7 +354,6 @@ Plot.plot({
   ]
 })
 ```
--->
 
 ```js
 const stationAverages = Array.from(
@@ -374,7 +373,7 @@ Plot.plot({
   },
   y: { label: "Station" },
   color: { 
-    scheme: "Reds",  
+    scheme: "YlOrRd",  
     reverse: false,     
     legend: true,
     label: "Avg Response Time"
@@ -390,10 +389,78 @@ Plot.plot({
   ]
 })
 ```
+-->
+
+```js
+Plot.plot({
+  marginLeft: 150,
+  title: "Response Times by Incident Severity Since 2020",
+  x: {label: "Response time (minutes)"},
+  y: {
+    label: null,
+    reverse: true,
+    tickFormat: (station) => {
+      const count = incidents.filter(d => {
+        const incidentDate = new Date(d.date);
+        return d.station === station && 
+               incidentDate >= new Date("2020-01-01") && 
+               incidentDate <= new Date("2025-08-14");
+      }).length;
+      return `${station} (${count})`;
+    }
+  },
+  color: {
+    legend: true,
+    scheme: "YlOrRd",
+    domain: ["low", "medium", "high"]
+  },
+  marks: [
+    Plot.ruleX([0]),
+    Plot.tickX(
+      incidents.filter(d => {
+        const incidentDate = new Date(d.date);
+        return incidentDate >= new Date("2020-01-01") && incidentDate <= new Date("2025-08-14");
+      }),
+      {
+        x: "response_time_minutes", 
+        y: "station", 
+        stroke: "severity", 
+        strokeOpacity: 0.5,
+        strokeWidth: 4,  // Add this to make markers fatter
+        tip: {
+          format: {
+            y: true,
+            x: true,
+            stroke: true
+          }
+        },
+        channels: {
+          "Date": "date"
+        }
+      }
+    ),
+    Plot.tickX(
+      incidents.filter(d => {
+        const incidentDate = new Date(d.date);
+        return incidentDate >= new Date("2020-01-01") && incidentDate <= new Date("2025-08-14");
+      }),
+      Plot.groupY(
+        {x: "mean"},
+        {x: "response_time_minutes", y: "station", strokeWidth: 4, sort: {y: "x"}}
+      )
+    )
+  ]
+})
+```
+
+
+<i>The toal number of incidents since 2020 at each station is listed in parenthesis next to the station name.
+Average response times for each station is marked in black.</i>
 
 #### Key Finding
-As is visble in the chart above, Columbus Circle, West 4th Street, Bowling Greene, Canal Street and Union Square show the slowest average response times.
-On average, Fulton & Houston Street, Times Square, and Penn Station respond to incidents most quickly.
+As is visble in the chart above, which considers all incidents since 2020, Columbus Circle, Bowling Green, Canal Street and Union Square show the slowest average response times. 
+On average, Times Square, and Penn Station respond to incidents most quickly.
+
 
 # Recommended Staffing Increases for 2026 
 
@@ -503,6 +570,4 @@ On average, Fulton & Houston Street, Times Square, and Penn Station respond to i
 In the summer of 2026, Canal Street, Penn Station, and Chambers Street are projected to field the most event attendees. Events near Canal Street are expected to draw over 70,000 attendees, Penn Station will likely accommodoate almost 60,000 attendees and CHambers Street station is located near events expected to draw close to 50,000 attendees.
 
 Based on Canal Street's projected additional traffic and the stations current placement in the top 5 for longest incident response times, I would prioritize it to receive additional staffing.
-
-
 
