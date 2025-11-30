@@ -146,7 +146,8 @@ Plot.plot({
   
   const avgEventRidership = d3.mean(eventDays, d => d.total_ridership);
   const avgNonEventRidership = d3.mean(nonEventDays, d => d.total_ridership);
-  
+
+
   Plot.plot({
     marks: [
       Plot.barY([
