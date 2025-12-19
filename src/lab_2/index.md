@@ -45,6 +45,12 @@ const currentStaffing = {
   "Astor Pl": 7
 }
 ```
+```js
+display(ridership[0]) 
+display(local_events[0]) 
+display(incidents[0])
+```
+----
 
 # Subway Staffing Report
 1. How did local events impact ridership in summer 2025? What effect did the July 15th fare increase have?
@@ -53,12 +59,6 @@ const currentStaffing = {
 4. If you had to prioritize _one_ station to get increased staffing, which would it be and why?
 
 
-
-```js
-display(ridership[0]) 
-display(local_events[0]) 
-display(incidents[0])
-```
 
 # Factors Impcating Ridership
 
@@ -136,9 +136,10 @@ Plot.plot({
   title: "NYC Subway Ridership - Summer 2025"
 })
 ```
--->
+
 
 ```js
+//decided not to show this - because it's not a helpful metric.
   const eventDatesSet = new Set(local_events.map(e => e.date));
   
   const eventDays = dailyData.filter(d => eventDatesSet.has(d.date));
@@ -146,8 +147,8 @@ Plot.plot({
   
   const avgEventRidership = d3.mean(eventDays, d => d.total_ridership);
   const avgNonEventRidership = d3.mean(nonEventDays, d => d.total_ridership);
-
-
+```
+```js
   Plot.plot({
     marks: [
       Plot.barY([
@@ -165,7 +166,7 @@ Plot.plot({
     title: "Event vs Non-Event Day Ridership"
   })
 ```
-
+-->
 On July 15th, 2025, the subway fare increased from $2.75 to $3.00.
 
 
@@ -284,8 +285,7 @@ html`<div class="card">
         x: "date",
         y: "total_ridership",
         title: d => `Date: ${new Date(d.date).toLocaleDateString()}
-Ridership: ${d.total_ridership.toLocaleString()}
-Event Day: ${eventDates.has(new Date(d.date).toDateString()) ? "Yes" : "No"}`
+Ridership: ${d.total_ridership.toLocaleString()}`
       }))
     ],
     x: { label: "Date" },
@@ -568,7 +568,105 @@ On average, Times Square, and Penn Station respond to incidents most quickly.
 -->
 
 #### Key Finding
-In the summer of 2026, Canal Street, Penn Station, and Chambers Street are projected to field the most event attendees. Events near Canal Street are expected to draw over 70,000 attendees, Penn Station will likely accommodoate almost 60,000 attendees and CHambers Street station is located near events expected to draw close to 50,000 attendees.
+In the summer of 2026, Canal Street, Penn Station, and Chambers Street are projected to field the most event attendees. Events near Canal Street are expected to draw over 70,000 attendees, Penn Station will likely accommodoate almost 60,000 attendees and Chambers Street station is located near events expected to draw close to 50,000 attendees.
 
-Based on Canal Street's projected additional traffic and the stations current placement in the top 5 for longest incident response times, I would prioritize it to receive additional staffing.
+----
+
+Considering these key findings, we can now look at which of the stations accomodating large numbers of attendees in 2026 will experinece the biggest staffing gap. 
+
+```js
+const avgRidershipByStation = d3.rollup(
+  ridershipWithTotal,
+  v => d3.mean(v, d => d.total_ridership),
+  d => d.station
+);
+```
+
+```js
+const eventAttendanceByStation = d3.rollup(
+  upcoming_events,
+  v => d3.sum(v, d => d.expected_attendance),
+  d => d.nearby_station
+);
+```
+
+```js
+const staffingGapData = Object.entries(currentStaffing).map(([station, staff]) => {
+  const avgRidership = avgRidershipByStation.get(station) || 0;
+  const eventAttendance = eventAttendanceByStation.get(station) || 0;
+  
+  const demandScore = avgRidership + eventAttendance;
+  const gapScore = demandScore / staff;
+  
+  return {
+    station,
+    staff,
+    avgRidership: Math.round(avgRidership),
+    eventAttendance,
+    demandScore: Math.round(demandScore),
+    gapScore: Math.round(gapScore)
+  };
+});
+```
+
+```js
+const stackedGapData = staffingGapData.flatMap(d => [
+  {
+    station: d.station,
+    category: "Avg Ridership",
+    value: d.avgRidership / d.staff,
+    gapScore: d.gapScore,
+    staff: d.staff
+  },
+  {
+    station: d.station,
+    category: "Event Attendance",
+    value: d.eventAttendance / d.staff,
+    gapScore: d.gapScore,
+    staff: d.staff
+  }
+]);
+```
+```js
+const topThreeStations = ["Canal St", "34 St-Penn Station", "Chambers St"];
+
+const stackedGapFiltered = stackedGapData.filter(d => 
+  topThreeStations.includes(d.station)
+);
+```
+
+```js
+Plot.plot({
+  marginLeft: 150,
+  height: 200,
+  title: "Staffing Gap: Ridership + Event Attendance per Staff Member",
+  subtitle: "Top 3 Stations sorted by total demand per staff",
+  x: { 
+    label: "Demand per Staff Member",
+    zero: true
+  },
+  y: { 
+    label: null 
+  },
+  color: {
+    legend: true,
+    domain: ["Avg Ridership", "Event Attendance"],
+    range: ["lightgrey", "magenta"]
+  },
+  marks: [
+    Plot.barX(stackedGapFiltered, {
+      x: "value",
+      y: "station",
+      fill: "category",
+      sort: { y: "-x" }
+    }),
+   Plot.tip(stackedGapFiltered, Plot.pointerY({
+  x: "value",
+  y: "station",
+  title: d => `Demand per Staff: ${d.gapScore.toLocaleString()}\nCurrent Staff: ${d.staff}`
+}))
+  ]
+})
+```
+Given what we saw in 2025 and looking at the events calendar for 2026, Canal Street will see the biggest increase in ridership by far and should be prioritized for staffing increases. 
 
