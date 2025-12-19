@@ -1,11 +1,16 @@
----
-title: "Lab 4: Clearwater Crisis"
-toc: false
+<style>
+  h3, h4, p, span, div {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+</style>
+
+Lab 4: Clearwater Crisis
+
 ---
 
-# Water Quality 
+# Water Quality at Clearwater Lake
 
-To determine what caused the ecological strain on Clearwater Lake and to explain the percipitous decline of the lake's trout and bass populations, we begin by taking a closer look at the water quality measurements collected in 2023 nd 2024 at the four measuring stations. This will give us insight into which pollutants exceed regulatory limits and which measuring stations log hazardous levels of pollutants. 
+To determine what caused the ecological strain on Clearwater Lake and to explain the percipitous decline of the lake's trout and bass populations, we begin by taking a closer look at the water quality measurements collected in 2023 and 2024 at the four measuring stations. This will give us insight into which measurements exceed regulatory limits and which measuring stations log hazardous levels of pollutants. 
 
 ```js
 const waterQuality = await FileAttachment("data/water_quality.csv")
@@ -98,6 +103,16 @@ Plot.plot({
   },
   marks: [
     Plot.frame(),
+    Plot.rect([{pollutantLabel: "Heavy Metals (ppb)"}], {
+      fy: "pollutantLabel",
+      x1: d3.min(waterByLimitLabeled, d => d.date),
+      x2: d3.max(waterByLimitLabeled, d => d.date),
+      y1: 0,
+      y2: d3.max(waterByLimitLabeled.filter(d => d.pollutantLabel === "Heavy Metals (ppb)"), d => d.pct_of_limit),
+      stroke: "#000000ff",
+      strokeWidth: 3,
+      fill: "none"
+    }),
     Plot.ruleY([100], {stroke: "#ef4444", strokeWidth: 2, strokeDasharray: "4,4"}),
     Plot.lineY(
       waterByLimitLabeled,
@@ -111,17 +126,16 @@ Plot.plot({
   ]
 })
 ```
-The visualizations show that the only measurement that repeatedly exceeds the regulatory limit are the Heavey Metals measured at the West Station. 
+The visualizations show that the only measurement that repeatedly exceeds the regulatory limit are the <b>Heavey Metals measured at the West Station.</b> 
 
-Anna Boutsikaris, a Watershed Specialist at the NYS Department of Environmental Conservation (and also part of my family), confirmed that heavy metal contents are most likely to affect aquatic life. 
+Adding to a recent paper's findings on heavey metal sensitivity of fresh water fish, Anna Boutsikaris, a Watershed Specialist at the NYS Department of Environmental Conservation (and also part of my family), confirmed that heavy metal contents are most likely to dramatically affect aquatic life. 
 
-With this in mind, we can consider other aspects of the data in more detail. We can look at how the suspects' various activities influence heavy metal levels, how ChemTech Manufacturing's activities (located near the West Station) align with spikes in heavy metal readings, and finally, how fish population developed since 2023 overall and specifically near sites with high heavy metal readings. 
-
+With this in mind, we can consider other aspects of the data in more detail. We can now look at how the suspects' various activities influence heavy metal levels. 
 
 # Suspects' Activities & Heavy Metal Contamination
 
 
-We can create a metric to better understand the heavy metal pollution's impact by tracking weekly heavy metal readings at nearby stations in relation to ther various activities at all four enterprises. Activites range from daily operations at recreatonal facilities to fertilizing activities at a farm to ChemTech's quarterly Maintainance Shutdown (which includes equipment cleaning). 
+To better understand the heavy metal pollution's impact, we can track weekly heavy metal readings at stations in relation to the various activities at the enterprises located near each station. These enterprises' activites range from daily operations at recreatonal facilities to fertilizing activities at a farm to ChemTech's quarterly Maintainance Shutdown (which includes equipment cleaning). 
 
 ```js
 const activitiesWithImpact = activities.map(d => {
@@ -146,7 +160,6 @@ const activitiesWithImpact = activities.map(d => {
   };
 });
 ```
-
 
 ```js
 const weeklyImpact = activities.flatMap(d => {
@@ -269,7 +282,7 @@ Plot.plot({
 })
 ```
 
-While activities at each of the suspects' show heavy metal readings, the long-lasting/ongoing activities don't show signs of compounding heavy metals measures, and levels stay mostly below 20 ppb (the EPA's concern level). The spikes in heavy metal pollution above the regulatory limit of 30 ppb remain confined to the activities of ChemTech. 
+While activities at all locations show heavy metal readings, the long-lasting/ongoing activities don't show signs of compounding heavy metals measures, and levels stay mostly below 20 ppb (the EPA's concern level). <b>The spikes in heavy metal pollution above the regulatory limit of 30 ppb remain confined to the activities of ChemTech.</b> 
 
 
 <!--  
@@ -408,14 +421,13 @@ Plot.plot({
   ]
 })
 ```
-Nearly every ChemTech shutdown period aligns with a spike in heavy metal readings. This isn't coincidental; it suggests they're dumping or releasing contaminated water during these "maintenance" windows.
+Nearly every ChemTech <b>shutdown period aligns with a spike in heavy metal readings.</b> This isn't coincidental; it suggests they're dumping or releasing contaminated water during these "maintenance" windows.
 The spikes regularly cross the EPA Concern threshold (20 ppb) and sometimes breach the EPA Limit (30 ppb), indicating environmental risks. Between shutdowns, heavy metal levels hover at a lower baseline. This constitutes further evidence that the spikes are event-driven, not due to gradual accumulation.
-
-Now we can look at whether or how these contamination patterns affected the lake's fish populations.
 
 
 # Tracking Fish Populations
 
+Now we can look at whether or how these contamination patterns affected the lake's fish populations overall and specifically near the West Station close to ChemTech.
 
 ```js
 const fishSurveys = await FileAttachment("data/fish_surveys.csv")
@@ -490,8 +502,7 @@ Plot.plot({
 ```
 -->
 
-
-<h3 style="margin: 0 0 4px 0; font-size: 18px;">Fish Population Decline at Clearwater Lake</h3>
+<h3 style="margin: 0 0 4px 0; font-size: 20px;">Fish Population Decline at Clearwater Lake</h3>
 <p style="margin: 0 0 16px 0; font-size: 13px; color: #666;">Overall trend (2023–2024) and breakdown by monitoring station (2024)</p>
 
 ```js
@@ -509,7 +520,6 @@ const fishTotals = Array.from(
   }))
 ).flat()
 ```
-
 
 ```js
 Plot.plot({
@@ -602,7 +612,7 @@ Plot.plot({
   ]
 })
 ```
-These paired charts reveal a lake-wide decline in fish populations over 2023–2024, with all two of the three species (Trout, Bass) showing downward trends — but the station breakdown exposes where the damage is worst. While East, North, and South stations show relatively stable or gradual declines, West Station stands out with the steepest drop, particularly for Trout (the most pollution-sensitive species). This geographic pattern aligns directly with the heavy metal contamination data: West Station sits nearest to ChemTech Manufacturing, and the fish populations there are collapsing fastest. 
+These paired charts reveal a lake-wide decline in fish populations over 2023–2024, with two of the three species (Trout, Bass) showing downward trends — but the station breakdown exposes where the damage is worst. While East, North, and South stations show relatively stable, gradual declines, or patterns of decline and recovery, West Station stands out with the steepest drop, particularly for Trout (the most pollution-sensitive species). This geographic pattern aligns directly with the heavy metal contamination data: <b>Nearest to ChemTech Manufacturing, the fish populations are most affected.</b> A closer look at the West Station's fish population over two years illustrates the changes by fish species.
 
 
 <!--
@@ -657,7 +667,7 @@ Plot.plot({ //bar plot - first draft
 -->
 
 
-<h3 style="margin: 0 0 4px 0; font-size: 18px;">Trout, Bass, and Carp at West Station</h3>
+<h3 style="margin: 0 0 4px 0; font-size: 20px;">Trout, Bass, and Carp Count at West Station</h3>
 
 ```js
 const selectedSpecies = view(Inputs.select(["All", "Trout", "Bass", "Carp"], {label: "Highlight species"}));
@@ -754,81 +764,39 @@ Plot.plot({
 })
 ```
 
+<div style="margin-top: 16px;">
+  <h4 style="margin: 0 0 12px 0; font-size: 20px;">Fish Health Summary at West Station (Jan 2023 → Oct 2024)</h4>
+  <div style="display: flex; gap: 12px;">
+    <div style="background: #fdf2f8; border: 1px solid #f9a8d4; border-radius: 8px; padding: 12px 16px; flex: 1;">
+      <div style="font-size: 11px; color: #9d174d; text-transform: uppercase; margin-bottom: 4px;">Trout (pollution-sensitive)</div>
+      <div style="font-size: 18px; font-weight: bold; color: #ec4899;">−70% population</div>
+      <div style="font-size: 13px; color: #ec4899;">−7% length · −10% weight</div>
+    </div>
+    <div style="background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 8px; padding: 12px 16px; flex: 1;">
+      <div style="font-size: 11px; color: #5b21b6; text-transform: uppercase; margin-bottom: 4px;">Bass (medium sensitivity)</div>
+      <div style="font-size: 18px; font-weight: bold; color: #7c3aed;">−38% population</div>
+      <div style="font-size: 13px; color: #7c3aed;">−7% length · −11% weight</div>
+    </div>
+    <div style="background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 12px 16px; flex: 1;">
+      <div style="font-size: 11px; color: #374151; text-transform: uppercase; margin-bottom: 4px;">Carp (pollution-resistant)</div>
+      <div style="font-size: 18px; font-weight: bold; color: #6b7280;">+35% population</div>
+      <div style="font-size: 13px; color: #6b7280;">+4% length · ~0% weight</div>
+    </div>
 
-<!--
+</div>
 
-```js
-Plot.plot({
-  title: "Trout, Bass, and Carp at West Station",
-  width: 900,
-  height: 400,
-  x: {label: null},
-  y: {grid: true, label: "Count"},
-  fx: {label: null},
-  color: {
-    legend: true,
-    domain: ["Trout", "Bass", "Carp"],
-    range: ["#ef8cd5ff", "#be7febff", "#a9a9b4ff"]
-  },
-  marks: [
-    Plot.barY(
-      fishByQuarter.filter(d => d.station_id === "West"),
-      Plot.groupX(
-        {y: "sum"},
-        {x: "species", y: "count", fill: "species", fx: "quarter"}
-      )
-    )
-  ]
-})
-```
-```js
-Plot.plot({
-  title: "Trout, Bass, and Carp at West Station",
-  width: 900,
-  height: 400,
-  marginLeft: 50,
-  color: {
-    domain: ["Trout", "Bass", "Carp"],
-    range: ["#ef8cd5ff", "#be7febff", "#a9a9b4ff"],
-    legend: true
-  },
-  fx: {label: null},
-  y: {grid: true, label: "Count"},
-  x: {axis: null, domain: ["Trout", "Bass", "Carp"]},
-  marks: [
-    Plot.ruleX(
-      fishByQuarter.filter(d => d.station_id === "West"),
-      Plot.groupX(
-        {y: "mean"},
-        {x: "species", y: "count", stroke: "species", strokeWidth: 3, fx: "quarter"}
-      )
-    ),
-    Plot.dot(
-      fishByQuarter.filter(d => d.station_id === "West"),
-      Plot.groupX(
-        {y: "mean"},
-        {x: "species", y: "count", fill: "species", r: 5, fx: "quarter"}
-      )
-    ),
-    Plot.ruleY([0])
-  ]
-})
-```
---> 
-
-We see trout count at the West Station dropping from 43 down to 13 while Bass fall from 60 to 37. Both are declining, but the Trout's collapse is more dramatic — exactly what we would expect with heavy metal pollution affecting sensitive species more severely.
-
-While Trout and Bass show clear downward trends, Carp — a species known for higer heavy-metal tolerane — actually increases slightly from 23 to 31. This divergence is another ecological signature of pollution: sensitive species decline while tolerant species fill the gap.
+Not only are sensitive species dying off, but the survivors are smaller and weigh less. Meanwhile the pollution-resistant Carp are actually thriving — both in numbers and size. These divergences are another ecological signature of pollution: sensitive species decline while tolerant species fill the gap.
 
 -----
 
 # Evidence Summary Pointing to ChemTech
 
-Geographic correlation: The West monitoring station, located just 800m from ChemTech Manufacturing, shows consistently elevated heavy metal levels (17% above lake average).
+<b>Geographic correlation:</b> The West monitoring station, located just 800m from ChemTech Manufacturing, shows consistently elevated heavy metal levels (17% above lake average).
 
-Temporal correlation: Heavy metal concentrations spike dramatically during ChemTech's quarterly "maintenance shutdowns" — rising from 12 ppb baseline to peaks of 23–49 ppb.
+<b>Temporal correlation:</b> Heavy metal concentrations spike dramatically during ChemTech's quarterly "maintenance shutdowns" — rising from 12 ppb baseline to peaks of 23–49 ppb.
 
-Biological indicator: Pollution-sensitive Trout populations at West station have crashed 70% while pollution-tolerant Carp have increased 35% — a classic signature of heavy metal contamination.
+<b>Biological indicator:</b> Pollution-sensitive Trout populations at West station have crashed 70% while pollution-tolerant Carp have increased 35% — a signature of heavy metal contamination.
+
 
 <!--
 ## ADDENDUM: South Station Cross-check
@@ -840,6 +808,7 @@ Because we observed repeated drops in trout population at the South Station, we 
 ```js
 Plot.plot({
   title: "West Heavy Metals vs South Trout & Bass (Normalized)",
+  subtitle: "Fish data shifted back 1 month to test for delayed pollution effects — water enters at Western shore",
   width: 900,
   height: 400,
   x: {label: null},
@@ -848,19 +817,29 @@ Plot.plot({
   marks: [
     Plot.lineY(
       waterLong.filter(d => d.pollutant === "heavy_metals_ppb" && d.station_id === "West"),
-      {x: "date", y: d => (d.value - 8) / (50 - 8), stroke: "#264653", strokeWidth: 2}
+      {x: "date", y: d => (d.value - 8) / (50 - 8), stroke: "#ef4444", strokeWidth: 2}
     ),
     Plot.lineY(
       fishSurveys.filter(d => d.station_id === "South" && d.species === "Trout"),
-      {x: "date", y: d => (d.count - 10) / (70 - 10), stroke: "#7c3aed", strokeWidth: 2}
+      {x: d => d3.timeMonth.offset(d.date, -1), y: d => (d.count - 10) / (70 - 10), stroke: "#7c3aed", strokeWidth: 2}
     ),
     Plot.lineY(
       fishSurveys.filter(d => d.station_id === "South" && d.species === "Bass"),
-      {x: "date", y: d => (d.count - 10) / (70 - 10), stroke: "#ec4899", strokeWidth: 2}
+      {x: d => d3.timeMonth.offset(d.date, -1), y: d => (d.count - 10) / (70 - 10), stroke: "#ec4899", strokeWidth: 2}
     ),
-    Plot.text([{x: new Date("2024-12-01"), y: 0.95, label: "West Heavy Metals"}], {x: "x", y: "y", text: "label", fill: "#264653", fontSize: 11}),
-    Plot.text([{x: new Date("2024-12-01"), y: 0.85, label: "South Trout"}], {x: "x", y: "y", text: "label", fill: "#7c3aed", fontSize: 11}),
-    Plot.text([{x: new Date("2024-12-01"), y: 0.75, label: "South Bass"}], {x: "x", y: "y", text: "label", fill: "#ec4899", fontSize: 11})
+    Plot.lineY(
+      fishSurveys.filter(d => d.station_id === "West" && d.species === "Trout"),
+      {x: "date", y: d => (d.count - 10) / (70 - 10), stroke: "#7c3aed", strokeWidth: 2, strokeDasharray: "4,4"}
+    ),
+    Plot.lineY(
+      fishSurveys.filter(d => d.station_id === "West" && d.species === "Bass"),
+      {x: "date", y: d => (d.count - 10) / (70 - 10), stroke: "#ec4899", strokeWidth: 2, strokeDasharray: "4,4"}
+    ),
+    Plot.text([{x: new Date("2024-12-01"), y: 0.95, label: "West Heavy Metals"}], {x: "x", y: "y", text: "label", fill: "#ef4444", fontSize: 11}),
+    Plot.text([{x: new Date("2024-12-01"), y: 0.85, label: "South Trout (−1 mo)"}], {x: "x", y: "y", text: "label", fill: "#7c3aed", fontSize: 11}),
+    Plot.text([{x: new Date("2024-12-01"), y: 0.75, label: "South Bass (−1 mo)"}], {x: "x", y: "y", text: "label", fill: "#ec4899", fontSize: 11}),
+    Plot.text([{x: new Date("2024-12-01"), y: 0.65, label: "West Trout (dashed)"}], {x: "x", y: "y", text: "label", fill: "#7c3aed", fontSize: 11}),
+    Plot.text([{x: new Date("2024-12-01"), y: 0.55, label: "West Bass (dashed)"}], {x: "x", y: "y", text: "label", fill: "#ec4899", fontSize: 11})
   ]
 })
 ```
@@ -868,4 +847,74 @@ This shows how the heavy metals spike at West correlates with fish populations a
 
 -->
 
+<!--
 
+ Looking at weight and length of fish
+
+```js
+Plot.plot({
+  title: "Fish Health Indicators by Station",
+  subtitle: "Average length over time — are fish near ChemTech getting smaller?",
+  width: 900,
+  height: 300,
+  x: {label: null},
+  y: {grid: true, label: "Length (cm)"},
+  fx: {label: null},
+  color: {
+    legend: true,
+    domain: ["Trout", "Bass", "Carp"],
+    range: ["#7c3aed", "#ec4899", "#6b7280"]
+  },
+  marks: [
+    Plot.frame(),
+    Plot.lineY(fishSurveys, {x: "date", y: "avg_length_cm", fx: "station_id", stroke: "species", strokeWidth: 2}),
+    Plot.dot(fishSurveys, {x: "date", y: "avg_length_cm", fx: "station_id", fill: "species", r: 3, tip: true})
+  ]
+})
+```
+```js
+Plot.plot({
+  subtitle: "Average weight over time",
+  width: 900,
+  height: 300,
+  x: {label: null},
+  y: {grid: true, label: "Weight (g)"},
+  fx: {label: null},
+  color: {
+    legend: false,
+    domain: ["Trout", "Bass", "Carp"],
+    range: ["#7c3aed", "#ec4899", "#6b7280"]
+  },
+  marks: [
+    Plot.frame(),
+    Plot.lineY(fishSurveys, {x: "date", y: "avg_weight_g", fx: "station_id", stroke: "species", strokeWidth: 2}),
+    Plot.dot(fishSurveys, {x: "date", y: "avg_weight_g", fx: "station_id", fill: "species", r: 3, tip: true})
+  ]
+})
+```
+```js
+Plot.plot({
+  title: "Surviving Fish Health at West Station",
+  subtitle: "Trout are getting smaller while pollution-resistant Carp remain stable",
+  width: 900,
+  height: 300,
+  x: {label: null},
+  y: {grid: true, label: "Average Length (cm)"},
+  color: {
+    legend: true,
+    domain: ["Trout", "Carp"],
+    range: ["#7c3aed", "#6b7280"]
+  },
+  marks: [
+    Plot.lineY(
+      fishSurveys.filter(d => d.station_id === "West" && (d.species === "Trout" || d.species === "Carp")),
+      {x: "date", y: "avg_length_cm", stroke: "species", strokeWidth: 2}
+    ),
+    Plot.dot(
+      fishSurveys.filter(d => d.station_id === "West" && (d.species === "Trout" || d.species === "Carp")),
+      {x: "date", y: "avg_length_cm", fill: "species", r: 4, tip: true}
+    )
+  ]
+})
+```
+-->
